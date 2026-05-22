@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/api.ts","./src/format.ts","./src/main.tsx","./src/vite-env.d.ts","./src/pages/routedetail.tsx","./src/pages/routeslist.tsx","./src/pages/stationdetail.tsx","./src/pages/stationslist.tsx","./src/pages/traindetail.tsx","./src/pages/trainslist.tsx"],"version":"5.9.3"}
