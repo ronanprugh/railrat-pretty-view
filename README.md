@@ -6,6 +6,13 @@ in a friendlier UI. Two pieces:
 - `worker/` — a Cloudflare Worker that scrapes railrat.net's HTML and serves JSON.
 - `web/` — a Vite + React + TypeScript + Tailwind PWA (mobile-first).
 
+## Live
+
+- **App:** https://railrat-pretty-view.pages.dev
+- **API:** https://railrat-pretty-view.rprugh4.workers.dev
+
+On iOS/Android, open the app URL and use Share → Add to Home Screen to install it as a PWA.
+
 ## Dev
 
 In one terminal:
@@ -33,3 +40,7 @@ Share → Add to Home Screen for the PWA install.
 
 - `GET /api/routes` — list of routes with active/pending/complete counts.
 - `GET /api/routes/:slug` — per-train stop schedule for one route.
+- `GET /api/trains` — all trains grouped by route.
+- `GET /api/trains/:num` — train status, progress timeline, and recent positions.
+- `GET /api/stations` — list of all stations.
+- `GET /api/stations/:code` — arriving and departed trains for a station.
