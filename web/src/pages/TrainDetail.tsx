@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { getTrain, type TrainDetailPayload, type TrainProgressStop } from "../api";
-import { to12h } from "../format";
+import { to12h, minutesUntil, formatDuration } from "../format";
 
 export default function TrainDetail() {
   const { num = "" } = useParams();
@@ -16,6 +16,17 @@ export default function TrainDetail() {
 
   if (err) return <p className="text-red-400">Failed to load: {err}</p>;
   if (!data) return <p className="text-slate-400">Loading…</p>;
+
+  // Reference clock = last position-update time, same timezone as the ETAs.
+  const nowHHMM = data.updatedAt?.match(/(\d{1,2}:\d{2})/)?.[1] ?? null;
+  // Next stop = first genuinely-upcoming stop, only while the train is active.
+  const isUpcoming = (e: TrainProgressStop["event"]) =>
+    e === "est. arrival" || e === "est. departure" || e === "scheduled";
+  const nextStop =
+    data.status === "active"
+      ? (data.progress.find((p) => isUpcoming(p.event)) ?? null)
+      : null;
+  const minsToNext = nextStop ? minutesUntil(nowHHMM, nextStop.time) : null;
 
   return (
     <div className="space-y-4">
@@ -50,10 +61,33 @@ export default function TrainDetail() {
           </div>
         </div>
 
+        {nextStop && (
+          <div className="rounded-lg bg-slate-950/60 p-3">
+            <div className="flex items-baseline gap-2">
+              <span className="text-xs uppercase tracking-wide text-slate-500">Next stop</span>
+              {minsToNext != null && (
+                <span className="ml-auto text-base font-semibold text-sky-300">
+                  {minsToNext > 0 ? formatDuration(minsToNext) + " away" : "arriving"}
+                </span>
+              )}
+            </div>
+            <div className="mt-1 text-lg font-semibold">{nextStop.station}</div>
+            <div className="mt-0.5 text-xs text-slate-500">
+              <span className="capitalize">{nextStop.event}</span> {to12h(nextStop.time)}
+              {nextStop.delayMin != null && (
+                <span className={nextStop.early ? "text-sky-400" : "text-amber-400"}>
+                  {" "}· {nextStop.delayMin} min {nextStop.early ? "early" : "late"}
+                </span>
+              )}
+            </div>
+          </div>
+        )}
+
         {data.position.text && (
-          <div className="rounded-lg bg-slate-950/60 p-3 text-sm">
-            <div className="font-medium">{data.position.text}</div>
-            <div className="mt-1 text-slate-400">
+          <div className="text-sm">
+            <span className="text-xs uppercase tracking-wide text-slate-500">Current location</span>
+            <div className="mt-0.5 font-medium">{data.position.text}</div>
+            <div className="mt-0.5 text-slate-400">
               {data.position.speedMph != null && (
                 <span className="tabular-nums">{data.position.speedMph} mph </span>
               )}
@@ -85,7 +119,7 @@ export default function TrainDetail() {
           </h2>
           <ol className="border-l border-slate-800 pl-4 space-y-3 ml-1">
             {data.progress.map((p, i) => (
-              <ProgressRow key={`${p.code}-${i}`} stop={p} />
+              <ProgressRow key={`${p.code}-${i}`} stop={p} now={nowHHMM} />
             ))}
           </ol>
         </section>
@@ -124,8 +158,9 @@ function StatusBadge({ status }: { status: TrainDetailPayload["status"] }) {
   );
 }
 
-function ProgressRow({ stop }: { stop: TrainProgressStop }) {
+function ProgressRow({ stop, now }: { stop: TrainProgressStop; now: string | null }) {
   const done = stop.event === "departed" || stop.event === "arrived";
+  const minsAway = done ? null : minutesUntil(now, stop.time);
   const dotColor = done
     ? "bg-emerald-500 ring-2 ring-emerald-500/30"
     : stop.early
@@ -168,6 +203,9 @@ function ProgressRow({ stop }: { stop: TrainProgressStop }) {
           <span className={`ml-2 ${stop.early ? "text-sky-400" : "text-amber-400"}`}>
             {stop.delayMin} min {stop.early ? "early" : "late"}
           </span>
+        )}
+        {minsAway != null && minsAway > 0 && (
+          <span className="ml-2 text-sky-300">· in {formatDuration(minsAway)}</span>
         )}
       </div>
     </li>
