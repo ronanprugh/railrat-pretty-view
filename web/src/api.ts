@@ -35,7 +35,12 @@ export type RouteDetailPayload = {
   trains: Train[];
 };
 
-const base = import.meta.env.DEV ? "" : (import.meta.env.VITE_API_BASE ?? "");
+// In dev, the Vite proxy forwards /api to the local Worker, so use a relative base.
+// In production, prefer VITE_API_BASE if set, otherwise fall back to the deployed Worker.
+const DEFAULT_API_BASE = "https://railrat-pretty-view.rprugh4.workers.dev";
+const base = import.meta.env.DEV
+  ? ""
+  : (import.meta.env.VITE_API_BASE ?? DEFAULT_API_BASE);
 
 export async function getRoutes(): Promise<RoutesPayload> {
   const r = await fetch(`${base}/api/routes`);
