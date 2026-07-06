@@ -10,9 +10,13 @@ import StationsList from "./pages/StationsList";
 import StationDetail from "./pages/StationDetail";
 import "./index.css";
 
+// Vite's BASE_URL is "/" in dev and "/RRPrettyView/" in prod (set in vite.config.ts).
+// BrowserRouter's basename wants no trailing slash.
+const basename = import.meta.env.BASE_URL.replace(/\/$/, "");
+
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <BrowserRouter>
+    <BrowserRouter basename={basename}>
       <Routes>
         <Route element={<App />}>
           <Route index element={<RoutesList />} />
